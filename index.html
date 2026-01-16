@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pocky Asian Restaurant – Social Previews</title>
+<title>Suite Collection – Social Previews</title>
 <style>
   /* ---------- Root variables (desktop first) ---------- */
   :root {
@@ -79,6 +79,48 @@
   .caption-body { margin: 0; }
   .caption-date { font-weight: 700; margin: 0.25rem 0 0; }
 
+  /* ---------- Carousel Styling ---------- */
+
+  .carousel {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.carousel video,
+.carousel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.carousel video.active,
+.carousel img.active {
+  opacity: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 1rem;
+  margin: 0.5rem 0;
+}
+
+.carousel-controls button {
+  padding: 0.3rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+
   /* ---------- Mobile tweaks ---------- */
   @media (max-width: 768px) {
     :root { --thumb-width: 110px; --gap: 1rem; }
@@ -114,68 +156,126 @@
 
   <!-- ------ PREVIEW AREA ------ -->
   <section class="preview">
-    <img id="previewImg" src="Pocky-Social-Posts.jpg" alt="Post 1 full image">
-    <p id="captionBody" class="caption-body">Tap on an image in the grid to preview full size image and accompanying caption.</p>
-    <p id="captionDate" class="caption-date"></p>
+ <div class="carousel" id="carousel">
+    <!-- JS will inject images/videos here -->
+  </div>
+  <div class="carousel-controls" id="carouselControls">
+    <button id="prevBtn">←</button>
+    <button id="nextBtn">→</button>
+  </div>
+  <p id="captionBody" class="caption-body">Tap on an image in the grid to preview full size image and accompanying caption.</p>
+  <p id="captionDate" class="caption-date"></p>
   </section>
 </main>
 
 <script>
-/* ========== HOW TO UPDATE ==========
-   1. Keep images beside this HTML file:
-      - Thumbnails : 01-thumb.jpg … 09-thumb.jpg
-      - Full images: 01-full.jpg  … 09-full.jpg
-   2. Edit captions[] and dates[] below.
-===================================== */
-
 const captions = [
-  "We're looking for front of house and kitchen legends to help us bring something special to Maleny. Drop us a DM and we'll send you details on how to apply.",
-  "The floors have been laid, polished and custom benches built.",
-  "Crockery has arrived from Thailand.",
-  "Our @noissueco tissue paper with our fresh Pocky branding. Feeling real.",
-  "[Name of sparky business] fitting out our kitchen with all our electrical needs.",
-  "What's in the box...",
-  "You'll have no problem finding us once the sign is lit.",
-  "All will be revealed in a few weeks.",
-  "A friendly neighbourhood Asian restaurant coming soon to Maleny."
+  "Caption 1",
+  "Caption 2",
+  "Caption 3",
+  "Caption 4",
+  "Caption 5",
+  "Caption 6",
+  "Caption 7",
+  "Caption 8",
+  "Caption 9"
 ];
 
 const dates = [
-  "Thursday 17 July 2025",
-  "Thursday 17 July 2025",
-  "Thursday 17 July 2025",
-  "Wednesday 16 July 2025",
-  "Wednesday 16 July 2025",
-  "Wednesday 16 July 2025",
-  "Tuesday 15 July 2025",
-  "Tuesday 15 July 2025",
-  "Tuesday 15 July 2025"
+  "17 July 2025", "17 July 2025", "17 July 2025",
+  "16 July 2025", "16 July 2025", "16 July 2025",
+  "15 July 2025", "15 July 2025", "15 July 2025"
 ];
 
-const thumbGrid   = document.getElementById("thumbGrid");
-const previewImg  = document.getElementById("previewImg");
+// Each post has a list of media assets (ordered)
+// You can mix image and video filenames freely
+const mediaMap = [
+  ["01a.jpg", "01b.mp4"],
+  ["02a.jpg"],
+  ["03a.jpg", "03b.jpg"],
+  ["04a.mp4"],
+  ["05a.jpg"],
+  ["06a.jpg"],
+  ["07a.jpg"],
+  ["08a.jpg", "08b.mp4", "08c.jpg"],
+  ["09a.jpg"]
+];
+
+const thumbGrid = document.getElementById("thumbGrid");
+const carousel = document.getElementById("carousel");
 const captionBody = document.getElementById("captionBody");
 const captionDate = document.getElementById("captionDate");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const carouselControls = document.getElementById("carouselControls");
+
+let currentSlide = 0;
+let currentMedia = [];
+
+function renderSlide(index) {
+  const slides = carousel.querySelectorAll("img, video");
+  slides.forEach((el, i) => {
+    el.classList.toggle("active", i === index);
+    if (el.tagName === "VIDEO") {
+      if (i === index) {
+        el.play();
+      } else {
+        el.pause();
+        el.currentTime = 0;
+      }
+    }
+  });
+}
 
 thumbGrid.addEventListener("click", e => {
   const img = e.target.closest("img[data-index]");
   if (!img) return;
 
   const idx = Number(img.dataset.index);
+  const media = mediaMap[idx];
 
-  /* ------------- Fade logic ------------- */
-  previewImg.style.opacity = 0;              // start fade-out
-  const newSrc = `${String(idx + 1).padStart(2,"0")}-full.jpg`;
+  // Reset carousel
+  carousel.innerHTML = "";
+  currentMedia = [];
 
-  // when the new image finishes loading, fade back in
-  previewImg.onload = () => { previewImg.style.opacity = 1; };
+  media.forEach(file => {
+    const ext = file.split('.').pop();
+    let el;
+    if (ext === "mp4") {
+      el = document.createElement("video");
+      el.src = file;
+      el.muted = true;
+      el.controls = true;
+    } else {
+      el = document.createElement("img");
+      el.src = file;
+    }
+    el.classList.add("slide");
+    carousel.appendChild(el);
+    currentMedia.push(el);
+  });
 
-  previewImg.src = newSrc;
-  previewImg.alt = `Post ${idx + 1} full image`;
   captionBody.textContent = captions[idx] || "";
-  captionDate.textContent = dates[idx]    || "";
+  captionDate.textContent = dates[idx] || "";
+
+  currentSlide = 0;
+  renderSlide(currentSlide);
+
+  // Show/hide nav
+  carouselControls.style.display = currentMedia.length > 1 ? "flex" : "none";
+});
+
+prevBtn.addEventListener("click", () => {
+  currentSlide = (currentSlide - 1 + currentMedia.length) % currentMedia.length;
+  renderSlide(currentSlide);
+});
+
+nextBtn.addEventListener("click", () => {
+  currentSlide = (currentSlide + 1) % currentMedia.length;
+  renderSlide(currentSlide);
 });
 </script>
+
 </body>
 </html>
 
