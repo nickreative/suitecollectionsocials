@@ -241,11 +241,11 @@ thumbGrid.addEventListener("click", e => {
   media.forEach(file => {
     const ext = file.split('.').pop();
     let el;
-    if (ext === "mp4") {
-      el = document.createElement("video");
-      el.src = file;
-      el.muted = true;
-      el.controls = true;
+   if (ext === "mp4" || ext === "webm") {
+  el = document.createElement("video");
+  el.src = file;
+  el.muted = true;
+  el.controls = true;
     } else {
       el = document.createElement("img");
       el.src = file;
