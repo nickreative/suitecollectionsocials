@@ -245,10 +245,12 @@ thumbGrid.addEventListener("click", e => {
     const ext = file.split('.').pop();
     let el;
    if (ext === "mp4" || ext === "webm") {
-  el = document.createElement("video");
-  el.src = file;
-  el.muted = true;
-  el.controls = true;
+el = document.createElement("video");
+el.src = file;
+el.muted = false;
+el.playsInline = true;   // REQUIRED for iOS
+el.autoplay = true;      // Optional but recommended
+el.loop = true;          // Optional
     } else {
       el = document.createElement("img");
       el.src = file;
