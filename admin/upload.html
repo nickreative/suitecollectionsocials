@@ -1,1 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload to Supabase</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Upload Media to Supabase</h1>
+  <form id="upload-form">
+    <label for="client">Client folder: Suite Collection</label>
+    <input type="text" id="client" required><br><br>
+
+    <label for="subfolder">Subfolder (e.g. 01-thumb or 01-full):</label>
+    <input type="text" id="subfolder" required><br><br>
+
+    <input type="file" id="mediaFile" accept="image/*,video/webm" required><br><br>
+    <button type="submit">Upload</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://tgvtmwdmwnzwqjzqxbkj.supabase.co',
+      'Ysb_publishable_8IB-F3e6XLAgnzWy6S3rhw_NpLyF92p'
+    );
+
+    const bucket = 'social-media';
+
+    document.getElementById('upload-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('mediaFile');
+      const client = document.getElementById('client').value;
+      const subfolder = document.getElementById('subfolder').value;
+      const file = fileInput.files[0];
+
+      const path = `${client}/${subfolder}/${file.name}`;
+
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { upsert: true });
+
+      document.getElementById('status').textContent = error
+        ? `❌ Error: ${error.message}`
+        : `✅ Uploaded to: ${path}`;
+    });
+  </script>
+</body>
+</html>
 
